@@ -3,11 +3,12 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import connectDB from '@/lib/mongoose';
-import Admin from '@/models/Admin';
 import Interviewer from '@/models/Interviewer';
+import { ROLES } from '@/lib/constants';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '30d';
@@ -36,8 +37,11 @@ export async function loginAdmin(prevState, formData) {
     
     await connectDB();
     
-    // Find admin in database
-    const admin = await Admin.findOne({ email });
+    // Find admin in database (using Interviewer model with admin role)
+    const admin = await Interviewer.findOne({ 
+      email, 
+      role: { $in: [ROLES.ADMIN] }
+    });
     
     // Check if admin exists
     if (!admin) {
@@ -64,7 +68,7 @@ export async function loginAdmin(prevState, formData) {
     });
     
     // Save token in cookies
-    cookies().set('admin_token', token, {
+    cookies().set('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
@@ -82,7 +86,8 @@ export async function loginAdmin(prevState, formData) {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        company: user.company
       }
     };
     
@@ -110,6 +115,12 @@ export async function createInterviewer(prevState, formData) {
     const password = formData.get('password');
     const company = formData.get('company');
     const position = formData.get('position') || '';
+    const role = formData.get('role') || 'interviewer';
+    
+    // Only superadmin can create other admins
+    if ((role === 'admin' || role === 'superadmin') && auth.role !== 'superadmin') {
+      return { success: false, message: 'Only superadmins can create admin accounts' };
+    }
     
     // Validate input
     if (!name || !email || !password || !company) {
@@ -136,6 +147,7 @@ export async function createInterviewer(prevState, formData) {
       password: hashedPassword,
       company,
       position,
+      role,
       lastLogin: null
     });
     
@@ -146,7 +158,8 @@ export async function createInterviewer(prevState, formData) {
         name: interviewer.name,
         email: interviewer.email,
         company: interviewer.company,
-        position: interviewer.position
+        position: interviewer.position,
+        role: interviewer.role
       }
     };
     
@@ -170,8 +183,8 @@ export async function getAllInterviewers() {
     
     await connectDB();
     
-    // Get all interviewers
-    const interviewers = await Interviewer.find({})
+    // Get all interviewers (users with interviewer role)
+    const interviewers = await Interviewer.find({ role: 'interviewer' })
       .select('-password')
       .sort({ createdAt: -1 });
     
@@ -187,9 +200,19 @@ export async function getAllInterviewers() {
 }
 
 /**
- * Update interviewer (admin only)
+ * Get all admins (superadmin only)
  */
-export async function updateInterviewer(prevState, formData) {
+
+
+/**
+ * Get all users (admin only)
+ */
+
+
+/**
+ * Update user (admin only)
+ */
+export async function updateUser(prevState, formData) {
   try {
     // Verify admin auth
     const auth = await getAuthAdmin();
@@ -203,6 +226,7 @@ export async function updateInterviewer(prevState, formData) {
     const email = formData.get('email');
     const company = formData.get('company');
     const position = formData.get('position') || '';
+    const role = formData.get('role');
     const password = formData.get('password'); // Optional
     
     // Validate input
@@ -212,14 +236,28 @@ export async function updateInterviewer(prevState, formData) {
     
     await connectDB();
     
-    // Check if email is already used by another interviewer
-    const existingInterviewer = await Interviewer.findOne({ 
+    // Get the user to update
+    const userToUpdate = await Interviewer.findById(id);
+    
+    if (!userToUpdate) {
+      return { success: false, message: 'User not found' };
+    }
+    
+    // Only superadmin can update another admin or change role to admin
+    if (auth.role !== 'superadmin') {
+      if (userToUpdate.role !== 'interviewer' || (role && role !== 'interviewer')) {
+        return { success: false, message: 'You do not have permission to update admin accounts or change roles' };
+      }
+    }
+    
+    // Check if email is already used by another user
+    const existingUser = await Interviewer.findOne({ 
       email, 
       _id: { $ne: id } 
     });
     
-    if (existingInterviewer) {
-      return { success: false, message: 'Email already registered by another interviewer' };
+    if (existingUser) {
+      return { success: false, message: 'Email already registered by another user' };
     }
     
     // Prepare update data
@@ -230,38 +268,46 @@ export async function updateInterviewer(prevState, formData) {
       position
     };
     
+    // Update role if provided and allowed
+    if (role) {
+      updateData.role = role;
+    }
+    
     // If password is provided, hash it
     if (password) {
       const salt = await bcrypt.genSalt(10);
       updateData.password = await bcrypt.hash(password, salt);
     }
     
-    // Update interviewer
-    const interviewer = await Interviewer.findByIdAndUpdate(
+    // Update user
+    const updatedUser = await Interviewer.findByIdAndUpdate(
       id,
       updateData,
       { new: true }
     ).select('-password');
     
-    if (!interviewer) {
-      return { success: false, message: 'Interviewer not found' };
+    if (!updatedUser) {
+      return { success: false, message: 'User not found' };
     }
+    
+    revalidatePath('/admin/users');
+    revalidatePath(`/admin/users/${id}`);
     
     return { 
       success: true, 
-      interviewer: interviewer.toObject()
+      user: updatedUser.toObject()
     };
     
   } catch (error) {
-    console.error('Update interviewer error:', error);
+    console.error('Update user error:', error);
     return { success: false, message: 'Server error' };
   }
 }
 
 /**
- * Delete interviewer (admin only)
+ * Delete user (admin only)
  */
-export async function deleteInterviewer(id) {
+export async function deleteUser(id) {
   try {
     // Verify admin auth
     const auth = await getAuthAdmin();
@@ -271,22 +317,41 @@ export async function deleteInterviewer(id) {
     }
     
     if (!id) {
-      return { success: false, message: 'Interviewer ID is required' };
+      return { success: false, message: 'User ID is required' };
     }
     
     await connectDB();
     
-    // Delete interviewer
+    // Get the user to delete
+    const userToDelete = await Interviewer.findById(id);
+    
+    if (!userToDelete) {
+      return { success: false, message: 'User not found' };
+    }
+    
+    // Only superadmin can delete admin accounts
+    if (userToDelete.role !== 'interviewer' && auth.role !== 'superadmin') {
+      return { success: false, message: 'You do not have permission to delete admin accounts' };
+    }
+    
+    // Cannot delete your own account
+    if (userToDelete._id.toString() === auth.id) {
+      return { success: false, message: 'You cannot delete your own account' };
+    }
+    
+    // Delete user
     const result = await Interviewer.findByIdAndDelete(id);
     
     if (!result) {
-      return { success: false, message: 'Interviewer not found' };
+      return { success: false, message: 'User not found' };
     }
+    
+    revalidatePath('/admin/users');
     
     return { success: true };
     
   } catch (error) {
-    console.error('Delete interviewer error:', error);
+    console.error('Delete user error:', error);
     return { success: false, message: 'Server error' };
   }
 }
@@ -296,7 +361,7 @@ export async function deleteInterviewer(id) {
  */
 export async function getAuthAdmin() {
   try {
-    const token = cookies().get('admin_token')?.value;
+    const token = cookies().get('token')?.value;
     
     if (!token) {
       return null;
@@ -311,9 +376,9 @@ export async function getAuthAdmin() {
     
     await connectDB();
     
-    const admin = await Admin.findById(decoded.id).select('-password');
+    const admin = await Interviewer.findById(decoded.id).select('-password');
     
-    if (!admin) {
+    if (!admin || !['admin', 'superadmin'].includes(admin.role)) {
       return null;
     }
     
@@ -321,7 +386,8 @@ export async function getAuthAdmin() {
       id: admin._id,
       name: admin.name,
       email: admin.email,
-      role: admin.role
+      role: admin.role,
+      company: admin.company
     };
     
   } catch (error) {
@@ -334,57 +400,7 @@ export async function getAuthAdmin() {
  * Admin logout action
  */
 export async function logoutAdmin() {
-  cookies().delete('admin_token');
-  redirect('/admin/login');
+  cookies().delete('token');
+  redirect('/login');
 }
 
-/**
- * Create initial admin if none exists
- * This should be used only once during initial setup
- */
-export async function createInitialAdmin(adminData) {
-  try {
-    await connectDB();
-    
-    // Check if any admin exists
-    const adminCount = await Admin.countDocuments();
-    
-    if (adminCount > 0) {
-      return { success: false, message: 'Admin already exists' };
-    }
-    
-    // Create initial admin
-    const { name, email, password } = adminData;
-    
-    if (!name || !email || !password) {
-      return { success: false, message: 'Please provide all required fields' };
-    }
-    
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    
-    // Create superadmin
-    const admin = await Admin.create({
-      name,
-      email,
-      password: hashedPassword,
-      role: 'superadmin',
-      lastLogin: new Date()
-    });
-    
-    return { 
-      success: true, 
-      admin: {
-        id: admin._id,
-        name: admin.name,
-        email: admin.email,
-        role: admin.role
-      }
-    };
-    
-  } catch (error) {
-    console.error('Create initial admin error:', error);
-    return { success: false, message: 'Server error' };
-  }
-}

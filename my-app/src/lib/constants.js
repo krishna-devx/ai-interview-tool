@@ -5,3 +5,8 @@ export const COLLECTION_NAME = {
     INTERVIEW: "INTERVIEW",
     FAV_QUESTIONS: "FAV_QUESTIONS"
 }
+
+export const ROLES = {
+    INTERVIEWER: "INTERVIEWER",
+    ADMIN: "ADMIN"
+}
