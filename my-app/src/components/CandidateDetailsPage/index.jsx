@@ -48,18 +48,18 @@ export default function InterviewDetailsPage() {
       {/* Left side - Tech-themed background with illustration */}
       <div className="hidden md:flex md:w-1/3 bg-gradient-to-b from-gray-900 to-gray-950 flex-col items-center justify-center p-8 relative border-r border-gray-800">
         <div className="relative w-64 h-64 bg-gray-800/50 rounded-full flex items-center justify-center mb-12 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-full"></div>
+          <div className="animate-pulse absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-full"></div>
           <div className="absolute w-56 h-56 bg-gray-900 rounded-full flex items-center justify-center z-10">
-            <Terminal className="w-24 h-24 text-cyan-400" />
+            <Terminal className="w-24 h-24 text-gray-100" />
           </div>
           <div className="absolute -right-4 top-12 z-20">
             <Code className="w-10 h-10 text-blue-400" />
           </div>
           <div className="absolute -left-8 bottom-12 z-20">
-            <Code className="w-10 h-10 text-cyan-400 rotate-180" />
+            <Code className="w-10 h-10 text-gray-100 rotate-180" />
           </div>
         </div>
-        <h2 className="text-cyan-400 text-xl font-semibold mb-4">
+        <h2 className="text-gray-100 text-xl font-semibold mb-4">
           Developer Interviews
         </h2>
         <p className="text-gray-400 text-center text-sm max-w-xs">
@@ -71,7 +71,7 @@ export default function InterviewDetailsPage() {
       {/* Right side - Interview details form */}
       <div className="w-full md:w-2/3 bg-gray-950 flex items-center justify-center p-6">
         <div className="w-full max-w-3xl">
-          <div className="bg-cyan-950/50 text-cyan-400 text-sm font-medium py-2 px-4 rounded-md inline-block mb-6 border border-cyan-900/50">
+          <div className="bg-cyan-950/50 text-gray-100 text-sm font-medium py-2 px-4 rounded-md inline-block mb-6 border border-cyan-900/50">
             Candidate Details
           </div>
 
@@ -196,13 +196,13 @@ export default function InterviewDetailsPage() {
                     {skills.map((skill, index) => (
                       <Badge
                         key={index}
-                        className="bg-gray-800 text-cyan-400 hover:bg-gray-700 px-3 py-1 border border-gray-700"
+                        className="bg-gray-800 text-gray-100 hover:bg-gray-700 px-3 py-1 border border-gray-700"
                       >
                         {skill}
                         <button
                           type="button"
                           onClick={() => removeSkill(skill)}
-                          className="ml-2 text-cyan-400 hover:text-cyan-300"
+                          className="ml-2 text-gray-100 hover:text-cyan-300"
                         >
                           <X size={14} />
                         </button>
@@ -241,10 +241,10 @@ export default function InterviewDetailsPage() {
                         </div>
                       ) : (
                         <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mb-2 border border-gray-700">
-                          <User size={40} className="text-cyan-400" />
+                          <User size={40} className="text-gray-100" />
                         </div>
                       )}
-                      <div className="flex items-center text-sm text-cyan-400">
+                      <div className="flex items-center text-sm text-gray-100">
                         <Upload size={16} className="mr-1" />
                         {profileImage ? "Change photo" : "Upload photo"}
                       </div>

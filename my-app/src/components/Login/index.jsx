@@ -11,15 +11,15 @@ export default function LoginPage() {
       {/* Left side - Tech-themed background with illustration */}
       <div className="hidden md:flex md:w-1/2 bg-gradient-to-b from-gray-900 to-gray-950 flex-col items-center justify-center p-8 relative border-r border-gray-800">
         <div className="relative w-64 h-64 bg-gray-800/50 rounded-full flex items-center justify-center mb-12 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-full"></div>
+          <div className="animate-pulse absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-full"></div>
           <div className="absolute w-56 h-56 bg-gray-900 rounded-full flex items-center justify-center z-10">
-            <Terminal className="w-24 h-24 text-cyan-400" />
+            <Terminal className="w-24 h-24 text-gray-100" />
           </div>
           <div className="absolute -right-4 top-12 z-20">
             <Code className="w-10 h-10 text-blue-400" />
           </div>
           <div className="absolute -left-8 bottom-12 z-20">
-            <Code className="w-10 h-10 text-cyan-400 rotate-180" />
+            <Code className="w-10 h-10 text-gray-100 rotate-180" />
           </div>
         </div>
         <p className="text-gray-400 text-center text-sm max-w-xs">
@@ -31,7 +31,7 @@ export default function LoginPage() {
       {/* Right side - Login form */}
       <div className="w-full md:w-1/2 bg-gray-950 flex items-center justify-center p-6">
         <div className="w-full max-w-md">
-          <div className="bg-cyan-950/50 text-cyan-400 text-sm font-medium py-2 px-4 rounded-md inline-block mb-6 border border-cyan-900/50">
+          <div className="bg-cyan-950/50 text-gray-100 text-sm font-medium py-2 px-4 rounded-md inline-block mb-6 border border-cyan-900/50">
             Welcome back
           </div>
 
