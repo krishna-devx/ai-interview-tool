@@ -37,14 +37,15 @@ const InterviewerSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['interviewer', 'admin', 'superadmin'],
-    default: 'interviewer'
+    enum: ['ADMIN'],
+    
   },
   lastLogin: {
     type: Date
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  collection:"INTERVIEWER"
 });
 
 // Create Interviewer model
@@ -69,11 +70,11 @@ async function createAdmin() {
     // Default admin credentials (customize these with environment variables)
     const adminData = {
       name: process.env.ADMIN_NAME || 'Super Admin',
-      email: process.env.ADMIN_EMAIL || 'admin@devx.com',
+      email: process.env.ADMIN_EMAIL || 'interviewer@devx.com',
       password: process.env.ADMIN_PASSWORD || 'Admin@1234',
       company: process.env.ADMIN_COMPANY || 'Interview AI Platform',
       position: 'Administrator',
-      role: 'superadmin'
+      role: 'ADMIN'
     };
     
     // Hash the password

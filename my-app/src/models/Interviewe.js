@@ -26,9 +26,9 @@ const IntervieweeSchema = new mongoose.Schema({
       required: [true, 'Position is required'],
       trim: true
     },
-    experienceYears: {
-      type: Number,
-      default: 0
+    experienceLevel: {
+      type: String,
+      default: "Easy"
     },
     skills: [{
       type: String,

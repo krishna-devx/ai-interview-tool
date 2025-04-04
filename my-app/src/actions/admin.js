@@ -56,8 +56,7 @@ export async function loginAdmin(prevState, formData) {
     }
     
     // Update last login time
-    admin.lastLogin = new Date();
-    await admin.save();
+
     
     // Generate JWT token
     const token = generateToken({
