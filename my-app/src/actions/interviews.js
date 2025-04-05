@@ -6,6 +6,7 @@ import connectDB from '@/lib/mongoose';
 import Interview from '@/models/Interview';
 import Interviewee from '@/models/Interviewee';
 import { getAuthUser } from './auth';
+import { createInterviewBusiness } from './businessLogic';
 
 /**
  * Create new interviewee
@@ -82,7 +83,7 @@ export async function getInterviewees() {
 /**
  * Create new interview
  */
-export async function createInterview(prevState, formData) {
+export async function createInterview(formData) {
   try {
     const auth = await getAuthUser();
     
@@ -100,6 +101,8 @@ export async function createInterview(prevState, formData) {
     
     await connectDB();
     
+    await createInterviewBusiness(formData)
+    
     // Verify the interviewee exists and belongs to this interviewer
     const interviewee = await Interviewee.findOne({
       _id: intervieweeId,
@@ -116,6 +119,8 @@ export async function createInterview(prevState, formData) {
       startTime,
       status: 'scheduled'
     });
+
+    createInterview()
     
     revalidatePath('/dashboard/interviews');
     

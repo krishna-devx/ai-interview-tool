@@ -2,6 +2,7 @@ import { COLLECTION_NAME } from '@/lib/constants';
 import mongoose from 'mongoose';
 
 const InterviewSchema = new mongoose.Schema({
+  // Original fields
   interviewer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Interviewer',
@@ -56,10 +57,37 @@ const InterviewSchema = new mongoose.Schema({
     type: String,
     enum: ['hire', 'reject', 'consider', 'pending'],
     default: 'pending'
+  },
+  
+  // Additional fields from server action
+  interviewId: { 
+    type: String, 
+    required: true, 
+    unique: true 
+  },
+  candidateId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Candidate' 
+  },
+  currentQuestionIndex: { 
+    type: Number, 
+    default: 0 
+  },
+  startedAt: { 
+    type: Date, 
+    default: Date.now 
+  },
+  updatedAt: { 
+    type: Date, 
+    default: Date.now 
+  },
+  // Additional fields for LangChain integration
+  threadId: {
+    type: String
   }
 }, {
   timestamps: true,
-  collection:COLLECTION_NAME.INTERVIEW
+  collection: COLLECTION_NAME.INTERVIEW
 });
 
 export default mongoose.models.Interview || mongoose.model('Interview', InterviewSchema);
